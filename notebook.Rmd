@@ -1,0 +1,33 @@
+---
+title: "Proyecto predicción de precios en viviendas"
+output: html_notebook
+---
+
+Importación y carga de paquetes
+
+```{r}
+library(tidyverse)
+library(caret)
+library(data.table)
+library(ggplot2)
+```
+
+
+Carga de los datos (Tarea 0)
+
+```{r}
+train_df <- read_csv('./data/train.csv')
+test_df <- read_csv('./data/test.csv')
+
+```
+
+Eliminación de variables que no aportan información al algoritmo (Tarea 5)
+
+## IMPORTANTE
+  Eliminar esta columna al finalizar el preprocesado, antes puede servir para algunas operaciones a la hora de partir y unir datasets.
+
+```{r}
+train_df <- subset( train_df, select = -Id )
+test_df <- subset( test_df, select = -Id )
+```
+
