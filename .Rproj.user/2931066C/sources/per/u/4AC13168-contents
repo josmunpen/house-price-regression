@@ -1,0 +1,24 @@
+---
+title: "Proyecto predicción de precios en viviendas"
+output: html_notebook
+---
+
+Importación y carga de paquetes
+
+```{r}
+library(tidyverse)
+library(caret)
+library(data.table)
+library(ggplot2)
+```
+
+
+Carga de los datos (Tarea 0)
+
+```{r}
+train_df <- read_csv('./data/train.csv')
+test_df <- read_csv('./data/test.csv')
+
+```
+
+
