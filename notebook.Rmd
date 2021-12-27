@@ -21,6 +21,68 @@ test_df <- read_csv('./data/test.csv')
 
 ```
 
+#Visualización de los datos
+
+Vamos a observar las primeras entradas de nuestro conjunto de datos para conocer un poco más de información sobre
+el dataset.
+
+```{r}
+train_df %>% head()
+```
+
+Número de filas y columnas del conjunto de entrenamiento.
+```{r}
+nrow(train_df)
+ncol(train_df)
+```
+
+Número de filas y columnas del conjunto de prueba.
+```{r}
+nrow(test_df)
+ncol(test_df)
+```
+
+##Preprocesamiento.
+
+#Eliminación de atributos con más de un 10% de entradas con valor NA. (Tarea 1)
+
+Primero obtendremos una tabla que nos muestre cuantos valores NA existen para cada columna.
+```{r}
+na_count <- sapply(train_df, function(y) sum((is.na(y))))
+na_count <- data.frame(na_count)
+```
+
+Ahora procederemos a eliminar las columnas que tengan más de un 10% de entradas con valor NA
+
+```{r}
+columns_na <- na_count %>% filter((na_count/nrow(train_df)*100) > 10) %>% rownames()
+```
+
+Por último, eliminaremos estas columnas tanto de nuestro conjunto de entrenamiento como en el de prueba.
+
+```{r}
+train_df <- train_df[,!(names(train_df) %in% columns_na)]
+test_df <- test_df[,!(names(test_df) %in% columns_na)]
+```
+#Rellenar campos con valor NA. (Tarea 3)
+
+Para todos los valores NA restantes, los modificaremos por las valores más frecuentes o con la media.
+
+```{r}
+na_modified <- function(x) {
+  if (is.numeric(x)) {
+    x[is.na(x)] <- mean(x, na.rm = TRUE)
+    x
+  } else {
+    x[is.na(x)] <- names(which.max(table(x)))
+    x
+  }
+}
+
+train_df <- as.data.frame(lapply(train_df,na_modified))
+test_df <- as.data.frame(lapply(test_df,na_modified))
+```
+
 Eliminación de variables que no aportan información al algoritmo (Tarea 5)
 
 ## IMPORTANTE
