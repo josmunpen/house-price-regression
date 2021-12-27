@@ -10,6 +10,9 @@ library(tidyverse)
 library(caret)
 library(data.table)
 library(ggplot2)
+library(dplyr)
+library(corrplot)
+library(psych)
 ```
 
 
@@ -82,6 +85,72 @@ na_modified <- function(x) {
 train_df <- as.data.frame(lapply(train_df,na_modified))
 test_df <- as.data.frame(lapply(test_df,na_modified))
 ```
+
+## Eliminación de variables no relevantes mediante correlación (Tarea 12)
+
+### NUMÉRICAS
+
+```{r}
+train_df_nums <- select_if(train_df, is.numeric)
+```
+Eliminación de NAs, este bloque debería sobrar cuando el limpiado esté completo
+```{r}
+train_df_nums <- subset( train_df_nums, select = -c(LotFrontage, MasVnrArea, GarageYrBlt))
+```
+
+```{r}
+
+train_cor <- cor(train_df_nums[ , colnames(train_df_nums) != "SalePrice"],
+                train_df_nums$SalePrice)
+```
+
+```{r}
+corrplot(train_cor,
+         cl.pos='n',
+         insig = 'p-value')
+```
+```{r}
+cor_coef_df <- as.data.frame(train_cor) %>% 
+    rename('abs_cor_coef' = V1) %>%
+    mutate(abs_cor_coef = abs(abs_cor_coef))
+cor_coef_df
+```
+```{r}
+drop_columns_less_20 <- cor_coef_df   %>% filter(abs_cor_coef <0.2)
+drop_columns_less_20
+```
+```{r}
+#bigger_threshold <- cor_coef_df > 0.2
+bigger_threshold <- replace(cor_coef_df, cor_coef_df<0.2, "red")
+bigger_threshold <- replace(bigger_threshold, cor_coef_df>0.2, "green")
+bigger_threshold[,1]
+```
+
+```{r}
+col_names <- row.names(cor_coef_df)
+```
+
+```{r}
+df <- as.data.frame(cor_coef_df)
+```
+
+
+```{r}
+ggplot(df
+       , aes(x=col_names, y=abs_cor_coef, fill = col_names)
+       ) + 
+  scale_fill_manual(
+    breaks = c(col_names),
+    values=c(bigger_threshold[,1])) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 70, vjust = 0.85, hjust=1))
+```
+
+
+```{r}
+train_df <- subset( train_df, select = -drop_columns_less_20 )
+```
+
 
 Eliminación de variables que no aportan información al algoritmo (Tarea 5)
 
