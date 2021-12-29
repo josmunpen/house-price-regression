@@ -24,7 +24,7 @@ test_df <- read_csv('./data/test.csv')
 
 ```
 
-#Visualización de los datos
+# Visualización de los datos
 
 Vamos a observar las primeras entradas de nuestro conjunto de datos para conocer un poco más de información sobre
 el dataset.
@@ -45,20 +45,20 @@ nrow(test_df)
 ncol(test_df)
 ```
 
-##Preprocesamiento.
+## Preprocesamiento.
 
-#Eliminación de atributos con más de un 10% de entradas con valor NA. (Tarea 1)
+# Eliminación de atributos con más de un 10% de entradas con valor NA. (Tarea 1)
 
 Primero obtendremos una tabla que nos muestre cuantos valores NA existen para cada columna.
 ```{r}
-na_count <- sapply(train_df, function(y) sum((is.na(y))))
-na_count <- data.frame(na_count)
+na_count <- data.frame(sapply(train_df, function(y) sum((is.na(y)))))
 ```
 
 Ahora procederemos a eliminar las columnas que tengan más de un 10% de entradas con valor NA
 
 ```{r}
 columns_na <- na_count %>% filter((na_count/nrow(train_df)*100) > 10) %>% rownames()
+columns_na
 ```
 
 Por último, eliminaremos estas columnas tanto de nuestro conjunto de entrenamiento como en el de prueba.
@@ -67,7 +67,7 @@ Por último, eliminaremos estas columnas tanto de nuestro conjunto de entrenamie
 train_df <- train_df[,!(names(train_df) %in% columns_na)]
 test_df <- test_df[,!(names(test_df) %in% columns_na)]
 ```
-#Rellenar campos con valor NA. (Tarea 3)
+# Rellenar campos con valor NA. (Tarea 3)
 
 Para todos los valores NA restantes, los modificaremos por las valores más frecuentes o con la media.
 
@@ -93,13 +93,8 @@ test_df <- as.data.frame(lapply(test_df,na_modified))
 ```{r}
 train_df_nums <- select_if(train_df, is.numeric)
 ```
-Eliminación de NAs, este bloque debería sobrar cuando el limpiado esté completo
-```{r}
-train_df_nums <- subset( train_df_nums, select = -c(LotFrontage, MasVnrArea, GarageYrBlt))
-```
 
 ```{r}
-
 train_cor <- cor(train_df_nums[ , colnames(train_df_nums) != "SalePrice"],
                 train_df_nums$SalePrice)
 ```
@@ -161,4 +156,3 @@ Eliminación de variables que no aportan información al algoritmo (Tarea 5)
 train_df <- subset( train_df, select = -Id )
 test_df <- subset( test_df, select = -Id )
 ```
-
