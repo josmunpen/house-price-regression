@@ -144,10 +144,14 @@ ggplot(df
   geom_bar(stat = "identity") +
   theme(axis.text.x = element_text(angle = 70, vjust = 0.85, hjust=1))
 ```
+```{r}
+train_df
 
+```
 
 ```{r}
-train_df <- subset( train_df, select = row.names(-drop_columns_less_20) )
+train_df <- train_df %>% select(-row.names(drop_columns_less_20))
+test_df <- test_df %>% select(-row.names(drop_columns_less_20))
 ```
 
 
@@ -188,7 +192,7 @@ more_than_threshold
 ```
 ```{r}
 # Esto debería hacerse con train y test, pero parece que no tienen las mismas dimensiones, por eso lo hago con las variables categóricas solamente
-merged_df <- rbind(train_df_not_nums, test_df_not_nums) %>% select(-more_than_threshold)
+merged_df <- rbind(train_df, test_df) %>% select(-more_than_threshold)
 
 dummy_vars <- dummyVars(" ~ .", data = merged_df)
 merged_df <- data.frame(predict(dummy_vars, newdata = merged_df))
@@ -217,4 +221,11 @@ merged_df <- data.frame(predict(dummy_vars, newdata = merged_df))
 ```{r}
 #columns <- predictors(rfe)
 # Aquí deberíamos ya montar el train y test finales, en principio debería hacer falta únicamente añadir la columna de SalePrice al train
+```
+```{r}
+dummy_vars_train <- dummyVars(" ~ .", data = train_df)
+dummy_vars_test <- dummyVars(" ~ .", data = test_df)
+
+predict_dummy_train <- data.frame(predict(dummy_vars_train, newdata = train_df))
+
 ```
