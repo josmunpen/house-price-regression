@@ -147,7 +147,7 @@ ggplot(df
 
 
 ```{r}
-train_df <- subset( train_df, select = -drop_columns_less_20 )
+train_df <- subset( train_df, select = row.names(-drop_columns_less_20) )
 ```
 
 
