@@ -97,7 +97,6 @@ test_df_nums <- select_if(test_df, is.numeric)
 test_df_not_nums <- select_if(test_df, negate(is.numeric))
 ```
 
-
 ```{r}
 
 train_cor <- cor(train_df_nums[ , colnames(train_df_nums) != "SalePrice"],
@@ -148,7 +147,7 @@ ggplot(df
 
 
 ```{r}
-train_df <- subset( train_df, select = rownames(-drop_columns_less_20) )
+train_df <- subset( train_df, select = -drop_columns_less_20 )
 ```
 
 
