@@ -14,6 +14,7 @@ library(dplyr)
 library(corrplot)
 library(psych)
 library(randomForest)
+library(Metrics)
 ```
 
 
@@ -224,3 +225,65 @@ sales_prices_df <- as.data.frame(sales_prices) %>% rename(SalePrice = sales_pric
 train_df <- cbind(train_df, sales_prices_df) %>% select(append(columns, 'SalePrice'))
 test_df <- test_df %>% select(columns)
 ```
+
+```{r}
+train_df_training <- train_df %>% select(-SalePrice)
+```
+
+```{r}
+trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3)
+```
+
+```{r}
+svm_Linear <- train(x=train_df_training, y=train_df$SalePrice, method = "svmLinear",
+    trControl=trctrl,
+#    preProcess = c("center", "scale"),
+    tuneLength = 10)
+
+```
+
+```{r}
+svm_Linear
+```
+
+```{r}
+test_pred <- predict(svm_Linear, newdata = test_df)
+test_pred
+```
+
+
+```{r}
+svm_radial <- train(x=train_df_training, y=train_df$SalePrice, method = "svmRadial",
+    trControl=trctrl,
+    preProcess = c("center", "scale"),
+    tuneLength = 10)
+
+```
+
+```{r}
+svm_radial
+```
+
+```{r}
+test_pred <- predict(svm_radial, newdata = test_df)
+rmsle(test_df, test_pred)
+```
+
+```{r}
+svm_poly <- train(x=train_df_training, y=train_df$SalePrice, method = "svmPoly",
+    trControl=trctrl,
+    preProcess = c("center", "scale"),
+    tuneLength = 4)
+
+```
+
+```{r}
+svm_poly
+```
+
+```{r}
+test_pred_aux <- as.data.frame(test_pred)
+test_pred_aux$Id <- rownames(test_df)
+
+```
+
