@@ -240,6 +240,10 @@ sales_prices <- train_df$SalePrice
 train_df <- train_df %>% select(-c("Id", "SalePrice"))
 test_df <- test_df %>% select(-Id)
 
+#Aplicamos escalado estándar para RFE
+train_df <- scale(train_df)
+test_df <- scale(test_df)                              
+
 #Crear train y test para RFE
 data_partition <- createDataPartition(sales_prices, p = .70, list = FALSE)
 RFE_X_train <- train_df[data_partition,]
