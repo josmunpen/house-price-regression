@@ -1,9 +1,12 @@
 ---
 title: "Proyecto predicción de precios en viviendas"
-output: html_notebook
+output:
+  pdf_document: default
+  html_document: 
+    df_print: paged
 ---
 
-Importación y carga de paquetes
+# Importación y carga de paquetes
 
 ```{r}
 library(tidyverse)
@@ -20,7 +23,7 @@ set.seed(1)
 ```
 
 
-Carga de los datos (Tarea 0)
+# Carga de los datos
 
 ```{r}
 train_df <- read_csv('./data/train.csv')
@@ -28,7 +31,7 @@ test_df <- read_csv('./data/test.csv')
 
 ```
 
-#Visualización de los datos
+# Visualización de los datos
 
 Vamos a observar las primeras entradas de nuestro conjunto de datos para conocer un poco más de información sobre
 el dataset.
@@ -84,7 +87,7 @@ missing_values %>%
 
 # Preprocesamiento.
 
-# Eliminación de atributos con más de un 10% de entradas con valor NA.
+## Eliminación de atributos con más de un 10% de entradas con valor NA.
 
 Primero obtendremos una tabla que nos muestre cuantos valores NA existen para cada columna.
 ```{r}
@@ -108,7 +111,7 @@ Por último, eliminaremos estas columnas tanto de nuestro conjunto de entrenamie
 train_df <- train_df[,!(names(train_df) %in% columns_na)]
 test_df <- test_df[,!(names(test_df) %in% columns_na)]
 ```
-# Rellenar campos con valor NA.
+## Rellenar campos con valor NA.
 
 Para todos los valores NA restantes, los modificaremos por las valores más frecuentes o con la media.
 
@@ -127,9 +130,9 @@ train_df <- as.data.frame(lapply(train_df,na_modified))
 test_df <- as.data.frame(lapply(test_df,na_modified))
 ```
 
-# Eliminación de variables no relevantes mediante correlación (Tarea 12)
+## Eliminación de variables no relevantes mediante correlación
 
-# NUMÉRICAS
+Se seleccionan y eliminan las variables numéricas que guardan un a correlación baja con la variable objetivo.
 
 ```{r}
 train_df_nums <- select_if(train_df, is.numeric)
@@ -174,6 +177,7 @@ col_names <- row.names(cor_coef_df)
 df <- as.data.frame(cor_coef_df)
 ```
 
+Se visualizan las variables que quedan descartadas (rojo) y seleccionadas (verde).
 
 ```{r}
 ggplot(df
@@ -197,10 +201,9 @@ train_df <- train_df %>% select(-row_names_less_20)
 test_df <- test_df %>% select(-row_names_less_20)
 ```
 
+## Eliminación de variables categóricas con demasiados valores
 
-Eliminación de variables que no aportan información al algoritmo (Tarea 5)
-
-Comprobamos cuántos valores únicos tiene cada columna de tipo string.
+Comprobamos cuántos valores únicos tiene cada columna categórica. En rojo se muestran las que quedarán descartadas por tener demasiados valores únicos (más de 8) y en verde las que se seleccionan.
 
 
 ```{r}
@@ -225,8 +228,9 @@ ggplot(unique_count
 more_than_threshold <- unique_count %>% filter(value >= threshold ) %>% rownames()
 more_than_threshold
 ```
+## Codificación, escalado y reducción de dimensionalidad
+
 ```{r}
-# Esto debería hacerse con train y test, pero parece que no tienen las mismas dimensiones, por eso lo hago con las variables categóricas solamente
 test_df <- test_df %>% mutate(SalePrice = -1);
 merged_df <- rbind(train_df, test_df) %>% select(-more_than_threshold)
 
@@ -273,7 +277,9 @@ test_df <- test_df %>% select(columns)
 train_df_training <- train_df %>% select(-SalePrice)
 ```
 
-# Extreme Gradient Boosting (XGB)
+# Entrenamiento
+
+## Extreme Gradient Boosting (XGB)
 
 ```{r}
 xgb_grid = expand.grid(nrounds = c(1000,2000, 3000), #Número de iteraciones. A mayor número mejores resultados pero entrenamiento más lento.
@@ -299,7 +305,9 @@ test_pred = predict(xgb_model , test_df)
 train_pred = predict(xgb_model, train_df)
 ```
 
-# Support Vector Machine (SVM)
+## Support Vector Machine (SVM)
+
+### Lineal
 
 ```{r}
 trctrl <- trainControl(method = "repeatedcv", number = 10, repeats = 3)
@@ -318,14 +326,13 @@ svm_Linear
 
 ```{r}
 test_pred <- predict(svm_Linear, newdata = test_df)
-test_pred
 ```
-
+### Radial
 
 ```{r}
 svm_radial <- train(x=train_df_training, y=train_df$SalePrice, method = "svmRadial",
     trControl=trctrl,
-    preProcess = c("center", "scale"),
+#    preProcess = c("center", "scale"),
     tuneLength = 10)
 ```
 
@@ -335,24 +342,9 @@ svm_radial
 
 ```{r}
 test_pred <- predict(svm_radial, newdata = test_df)
-rmsle(test_df, test_pred)
 ```
 
-```{r}
-svm_poly <- train(x=train_df_training, y=train_df$SalePrice, method = "svmPoly",
-    trControl=trctrl,
-    preProcess = c("center", "scale"),
-    tuneLength = 4)
-```
-
-```{r}
-svm_poly
-```
-
-```{r}
-test_pred_aux <- as.data.frame(test_pred)
-test_pred_aux$Id <- rownames(test_df)
-```
+## Random Forest
 
 ```{r}
 rf_fit <- train(SalePrice ~ ., data = train_df, method = 'rf', importance = TRUE, trControl = trainControl(method = 'cv', number = 10))
