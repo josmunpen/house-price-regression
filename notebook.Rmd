@@ -66,10 +66,10 @@ ggplot(train_df, aes(x=SalePrice)) +
     theme(axis.text.x = element_text(angle=45,size=7))
 ```
 
-Visualización de atributos con valor NA
+Visualización de atributos con valor NA en el conjunto de entrenamiento.
 
 ```{r}
-missing_values <- train_df %>%
+missing_values_train <- train_df %>%
     gather(key = "key", value = "val") %>%
     mutate(is.missing = is.na(val)) %>%
     group_by(key, is.missing) %>%
@@ -78,13 +78,32 @@ missing_values <- train_df %>%
     select(-is.missing) %>%
     arrange(desc(num.missing)) 
 
-missing_values %>%
+missing_values_train %>%
   ggplot() +
     geom_bar(color="black",fill="blue",aes(x=key, y=num.missing), stat = 'identity') +
     labs(x='Atributo', y="Número de valores NA") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+Visualización de atributos con valor NA en el conjunto de test.
+
+
+```{r}
+missing_values_test <- test_df %>%
+    gather(key = "key", value = "val") %>%
+    mutate(is.missing = is.na(val)) %>%
+    group_by(key, is.missing) %>%
+    summarise(num.missing = n()) %>%
+    filter(is.missing==T) %>%
+    select(-is.missing) %>%
+    arrange(desc(num.missing)) 
+
+missing_values_test %>%
+  ggplot() +
+    geom_bar(color="black",fill="blue",aes(x=key, y=num.missing), stat = 'identity') +
+    labs(x='Atributo', y="Número de valores NA") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
 # Preprocesamiento.
 
 ## Eliminación de atributos con más de un 10% de entradas con valor NA.
@@ -94,7 +113,7 @@ Primero obtendremos una tabla que nos muestre cuantos valores NA existen para ca
 na_count <- sapply(train_df, function(y) sum((is.na(y))))
 na_count <- data.frame(na_count)
 
-missing_values
+missing_values_train
 
 ```
 
@@ -287,7 +306,7 @@ xgb_grid = expand.grid(nrounds = c(1000,2000, 3000), #Número de iteraciones. A 
                             lambda = 1,
                             alpha = 0)
 xgb_trcontrol = trainControl(method = "cv",
-                                number = 3,
+                                number = 10,
                                 verboseIter = TRUE,
                                 returnData = FALSE,
                                 returnResamp = "all", 
@@ -298,11 +317,12 @@ xgb_model <- train(x = as.matrix(train_df_training),
                     trControl = xgb_trcontrol,
                     tuneGrid = xgb_grid,
                     method = "xgbLinear",
-                    metric= "RMSLE",
                     max.depth = 5) #Profundidad de los árboles de regresión. Si es un valor grande puede haber overfitting.
+xgb_model
 
 test_pred = predict(xgb_model , test_df)
 train_pred = predict(xgb_model, train_df)
+
 ```
 
 ## Support Vector Machine (SVM)
@@ -350,4 +370,7 @@ test_pred <- predict(svm_radial, newdata = test_df)
 rf_fit <- train(SalePrice ~ ., data = train_df, method = 'rf', importance = TRUE, trControl = trainControl(method = 'cv', number = 10))
 
 rf_fit
+
+test_pred <- predict(rf_fit,  newdata = test_df)
+
 ```
